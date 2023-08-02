@@ -18,7 +18,7 @@ const initializeDbAndServer = async () => {
       console.log("Server Running at PORT 3000");
     });
   } catch (e) {
-    console.log("DB ERROR: ${e.message}");
+    console.log(`DB ERROR: ${e.message}`);
     process.exit(1);
   }
 };
@@ -27,28 +27,41 @@ initializeDbAndServer();
 
 // API 1 to get list of all players
 
+const convertDbObjectToResponseObject = (dbObject) => {
+  return {
+    playerId: dbObject.player_id,
+    playerName: dbObject.player_name,
+    jerseyNumber: dbObject.jersey_number,
+    role: dbObject.role,
+  };
+};
+
 app.get("/players/", async (req, res) => {
   const getPlayersQuery = `
     SELECT * FROM cricket_team;`;
   const playersArray = await db.all(getPlayersQuery);
-  res.send(playersArray);
+  res.send(
+    playersArray.map((eachObject) =>
+      convertDbObjectToResponseObject(eachObject)
+    )
+  );
 });
 
 //API 2 to post player details
 
 app.post("/players/", async (request, response) => {
   const playerDetails = request.body;
-  console.log(playerDetails);
+  //   console.log(playerDetails);
   const { playerName, jerseyNumber, role } = playerDetails;
   const addPlayerQuery = `
   INSERT INTO cricket_team(player_name,jersey_number,role)
   VALUES(
-      ${playerName},
+      '${playerName}',
       ${jerseyNumber},
-      ${role});`;
+      '${role}');`;
   const addPlayerRes = await db.run(addPlayerQuery);
   const playerId = addPlayerRes.lastID;
-  response.send("PlaterAdded to Team");
+  response.send("Player Added to Team");
 });
 
 // API 3 to get a single player details
@@ -58,24 +71,24 @@ app.get("/players/:playerId", async (req, res) => {
   const getPlayerQuery = `
     SELECT * FROM cricket_team WHERE player_id=${playerId};`;
   const playerArray = await db.get(getPlayerQuery);
-  res.send(playerArray);
+  res.send(convertDbObjectToResponseObject(playerArray));
 });
 
 // API 4 to update player details
 
 app.put("/players/:playerId", async (req, res) => {
   const { playerId } = req.params;
-  const playerDeatilsToUpdate = req.body;
-  const { playerName, jerseyNumber, role } = playerDeatilsToUpdate;
+  const playerDetailsToUpdate = req.body;
+  const { playerName, jerseyNumber, role } = playerDetailsToUpdate;
   const updatePlayerQuery = `
     UPDATE cricket_team
     SET 
-        player_name=${playerName},
+        player_name='${playerName}',
         jersey_number=${jerseyNumber},
-        role=${role}
+        role='${role}'
     WHERE player_id=${playerId};`;
   await db.run(updatePlayerQuery);
-  res.send("Player Details Up");
+  res.send("Player Details Updated");
 });
 
 // API 5 to delete player
