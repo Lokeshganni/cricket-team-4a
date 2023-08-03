@@ -79,6 +79,7 @@ app.get("/players/:playerId", async (req, res) => {
 app.put("/players/:playerId", async (req, res) => {
   const { playerId } = req.params;
   const playerDetailsToUpdate = req.body;
+  console.log(playerDetailsToUpdate);
   const { playerName, jerseyNumber, role } = playerDetailsToUpdate;
   const updatePlayerQuery = `
     UPDATE cricket_team
